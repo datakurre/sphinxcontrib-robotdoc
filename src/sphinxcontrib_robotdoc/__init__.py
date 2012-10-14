@@ -108,7 +108,11 @@ class KeywordsDirective(Directive):
         to_cwd = os.path.relpath(os.getcwd(), source_directory)
 
         filename = os.path.relpath(self.options["suite"], to_cwd)
-        resource = robot.parsing.TestData(source=filename)
+        try:
+            resource = robot.parsing.TestData(source=filename)
+        except robot.errors.DataError:
+            resource = robot.parsing.ResourceFile(source=filename)
+            resource.populate()
 
         if self.content:
             needle = re.compile(self.content[0].strip(), re.U)
