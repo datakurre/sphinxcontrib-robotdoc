@@ -22,9 +22,10 @@ def StepNode(obj):
 def TestCaseNode(obj):
     assert isinstance(obj, robot.parsing.model.TestCase)
 
-    test = nodes.topic()
+    test = nodes.section()
 
     test.append(nodes.title(text=obj.name))
+    test['ids'].append(nodes.make_id(obj.name))
 
     doc = obj.doc.value.replace('\\n', '\n')  # fix linebreaks
     test.append(nodes.paragraph(text=doc))
@@ -42,22 +43,24 @@ def TestCaseNode(obj):
 def KeywordNode(obj):
     assert isinstance(obj, robot.parsing.model.UserKeyword)
 
-    test = nodes.topic()
+    test = nodes.section()
 
     test.append(nodes.title(text=obj.name))
+    test['ids'].append(nodes.make_id(obj.name))
 
     doc = obj.doc.value.replace('\\n', '\n')  # fix linebreaks
     test.append(nodes.paragraph(text=doc))
 
     steps = nodes.literal_block()
     steps.extend(map(StepNode, obj.steps))
+
     # insert newlines:
     for i in range(len(obj.steps[:-1]), 0, -1):
         steps.insert(i, nodes.inline(text="\n"))
+
     test.append(steps)
 
     return test
-
 
 
 class TestCasesDirective(Directive):
@@ -121,7 +124,6 @@ class KeywordsDirective(Directive):
 
         keywords = filter(lambda x: needle.match(x.name),
                           resource.keywords)
-
         return map(KeywordNode, keywords)
 
 
