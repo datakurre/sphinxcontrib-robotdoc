@@ -1,6 +1,11 @@
 Changelog
 ---------
 
+0.1.1 (2012-10-14)
+------------------
+
+- Fixed parsing of resource-only files for keywords.
+
 0.1.0 (2012-10-14)
 ------------------
 
