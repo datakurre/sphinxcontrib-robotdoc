@@ -4,7 +4,10 @@
 import re
 import os
 
+from lxml import etree
+
 from docutils.parsers.rst import directives
+from docutils.core import publish_string
 
 from sphinx.util.compat import (
     nodes,
@@ -14,12 +17,12 @@ from sphinx.util.compat import (
 import robot
 
 
-def StepNode(obj, state=None):
+def StepNode(obj):
     assert isinstance(obj, robot.parsing.model.Step)
     return nodes.inline(text='  '.join(obj.as_list()))
 
 
-def TestCaseNode(obj, state=None):
+def TestCaseNode(obj):
     assert isinstance(obj, robot.parsing.model.TestCase)
 
     test = nodes.section()
@@ -28,8 +31,18 @@ def TestCaseNode(obj, state=None):
     test['ids'].append(nodes.make_id(obj.name))
 
     doc = obj.doc.value.replace('\\n', '\n')  # fix linebreaks
-    for par in doc.split("\n\n"):
-        test.extend(state.paragraph(par.split(), 0)[0])
+    if doc:
+        doc_html = publish_string(doc, writer_name="html")
+        root = etree.fromstring(doc_html)
+        body = root.xpath(
+            "//xhtml:div[@class='document']",
+            namespaces={'xhtml': 'http://www.w3.org/1999/xhtml'}
+        )[0]
+        # XXX: This well leave xmlns-declarations into generaed HTML-tags:
+        html = ''.join(map(lambda node: etree.tostring(node),
+                           body.getchildren()))
+        raw = nodes.raw(text=html, format="html")
+        test.append(raw)
 
     comment = re.compile("^\s*#.*")
     all_steps = filter(lambda x: not comment.match(x.as_list()[0]), obj.steps)
@@ -45,7 +58,7 @@ def TestCaseNode(obj, state=None):
     return test
 
 
-def KeywordNode(obj, state=None):
+def KeywordNode(obj):
     assert isinstance(obj, robot.parsing.model.UserKeyword)
 
     keyword = nodes.section()
@@ -54,8 +67,18 @@ def KeywordNode(obj, state=None):
     keyword['ids'].append(nodes.make_id(obj.name))
 
     doc = obj.doc.value.replace('\\n', '\n')  # fix linebreaks
-    for par in doc.split("\n\n"):
-        keyword.extend(state.paragraph(par.split(), 0)[0])
+    if doc:
+        doc_html = publish_string(doc, writer_name="html")
+        root = etree.fromstring(doc_html)
+        body = root.xpath(
+            "//xhtml:div[@class='document']",
+            namespaces={'xhtml': 'http://www.w3.org/1999/xhtml'}
+        )[0]
+        # XXX: This well leave xmlns-declarations into generaed HTML-tags:
+        html = ''.join(map(lambda node: etree.tostring(node),
+                           body.getchildren()))
+        raw = nodes.raw(text=html, format="html")
+        keyword.append(raw)
 
     comment = re.compile("^\s*#.*")
     all_steps = filter(lambda x: not comment.match(x.as_list()[0]), obj.steps)
@@ -116,7 +139,7 @@ class TestCasesDirective(Directive):
         tests = filter(lambda x: tag_filter(x), tests) if tags else tests
 
         # Finally, return Docutils nodes for the tests
-        return map(lambda x: TestCaseNode(x, self.state), tests)
+        return map(TestCaseNode, tests)
 
 
 class KeywordsDirective(Directive):
@@ -150,7 +173,7 @@ class KeywordsDirective(Directive):
 
         keywords = filter(lambda x: needle.match(x.name),
                           resource.keywords)
-        return map(lambda x: KeywordNode(x, self.state), keywords)
+        return map(KeywordNode, keywords)
 
 
 def setup(app):
