@@ -14,12 +14,12 @@ from sphinx.util.compat import (
 import robot
 
 
-def StepNode(obj):
+def StepNode(obj, state=None):
     assert isinstance(obj, robot.parsing.model.Step)
     return nodes.inline(text='  '.join(obj.as_list()))
 
 
-def TestCaseNode(obj):
+def TestCaseNode(obj, state=None):
     assert isinstance(obj, robot.parsing.model.TestCase)
 
     test = nodes.section()
@@ -28,7 +28,8 @@ def TestCaseNode(obj):
     test['ids'].append(nodes.make_id(obj.name))
 
     doc = obj.doc.value.replace('\\n', '\n')  # fix linebreaks
-    test.append(nodes.paragraph(text=doc))
+    for par in doc.split("\n\n"):
+        test.extend(state.paragraph(par.split(), 0)[0])
 
     comment = re.compile("^\s*#.*")
     all_steps = filter(lambda x: not comment.match(x.as_list()[0]), obj.steps)
@@ -44,16 +45,17 @@ def TestCaseNode(obj):
     return test
 
 
-def KeywordNode(obj):
+def KeywordNode(obj, state=None):
     assert isinstance(obj, robot.parsing.model.UserKeyword)
 
-    test = nodes.section()
+    keyword = nodes.section()
 
-    test.append(nodes.title(text=obj.name))
-    test['ids'].append(nodes.make_id(obj.name))
+    keyword.append(nodes.title(text=obj.name))
+    keyword['ids'].append(nodes.make_id(obj.name))
 
     doc = obj.doc.value.replace('\\n', '\n')  # fix linebreaks
-    test.append(nodes.paragraph(text=doc))
+    for par in doc.split("\n\n"):
+        keyword.extend(state.paragraph(par.split(), 0)[0])
 
     comment = re.compile("^\s*#.*")
     all_steps = filter(lambda x: not comment.match(x.as_list()[0]), obj.steps)
@@ -65,9 +67,9 @@ def KeywordNode(obj):
     for i in range(len(all_steps[:-1]), 0, -1):
         steps.insert(i, nodes.inline(text='\n'))
 
-    test.append(steps)
+    keyword.append(steps)
 
-    return test
+    return keyword
 
 
 class TestCasesDirective(Directive):
@@ -114,7 +116,7 @@ class TestCasesDirective(Directive):
         tests = filter(lambda x: tag_filter(x), tests) if tags else tests
 
         # Finally, return Docutils nodes for the tests
-        return map(TestCaseNode, tests)
+        return map(lambda x: TestCaseNode(x, self.state), tests)
 
 
 class KeywordsDirective(Directive):
@@ -148,7 +150,7 @@ class KeywordsDirective(Directive):
 
         keywords = filter(lambda x: needle.match(x.name),
                           resource.keywords)
-        return map(KeywordNode, keywords)
+        return map(lambda x: KeywordNode(x, self.state), keywords)
 
 
 def setup(app):
