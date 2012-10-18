@@ -1,6 +1,13 @@
 Changelog
 ---------
 
+0.3.1 (2012-10-18)
+------------------
+
+- Refactored to parse test/keyword documentation with
+  docutils.core.publish_string (and append them as raw nodes) instead of trying
+  to parse them into sphinx document tree.
+
 0.3.0 (2012-10-18)
 ------------------
 
