@@ -1,6 +1,16 @@
 Changelog
 ---------
 
+0.3.0 (2012-10-18)
+------------------
+
+- Added support for inline rst in test and keyword  documentations.
+- Added support for *tags*.
+- Added alternative *source* option as an alias for *suite* option in tests.
+- Added alternative *source* and *resource* options as an alias for *suite*
+  option in keywords.
+- Fixed to filter comment lines from steps.
+
 0.2.0 (2012-10-14)
 ------------------
 
