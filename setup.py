@@ -23,7 +23,6 @@ setup(
     zip_safe=False,
     install_requires=[
         "setuptools",
-        "lxml",  # I'm so sorry about that...
         "robotframework>=2.7.1"
     ]
 )

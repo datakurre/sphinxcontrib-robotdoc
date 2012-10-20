@@ -4,10 +4,8 @@
 import re
 import os
 
-from lxml import etree
-
+from docutils import statemachine
 from docutils.parsers.rst import directives
-from docutils.core import publish_string
 
 from sphinx.util.compat import (
     nodes,
@@ -17,82 +15,83 @@ from sphinx.util.compat import (
 import robot
 
 
-def StepNode(obj):
-    assert isinstance(obj, robot.parsing.model.Step)
-    return nodes.inline(text='  '.join(obj.as_list()))
+class Adapter(object):
+
+    def __init__(self, context):
+        self.context = context
 
 
-def TestCaseNode(obj):
-    assert isinstance(obj, robot.parsing.model.TestCase)
+class StepNode(Adapter):
 
-    test = nodes.section()
-
-    test.append(nodes.title(text=obj.name))
-    test['ids'].append(nodes.make_id(obj.name))
-
-    doc = obj.doc.value.replace('\\n', '\n')  # fix linebreaks
-    if doc:
-        doc_html = publish_string(doc, writer_name="html")
-        root = etree.fromstring(doc_html)
-        body = root.xpath(
-            "//xhtml:div[@class='document']",
-            namespaces={'xhtml': 'http://www.w3.org/1999/xhtml'}
-        )[0]
-        # XXX: This well leave xmlns-declarations into generaed HTML-tags:
-        html = ''.join(map(lambda node: etree.tostring(node),
-                           body.getchildren()))
-        raw = nodes.raw(text=html, format="html")
-        test.append(raw)
-
-    comment = re.compile("^\s*#.*")
-    all_steps = filter(lambda x: not comment.match(x.as_list()[0]), obj.steps)
-
-    steps = nodes.literal_block()
-    steps.extend(map(StepNode, all_steps))
-
-    # Insert newlines between steps:
-    for i in range(len(all_steps[:-1]), 0, -1):
-        steps.insert(i, nodes.inline(text='\n'))
-    test.append(steps)
-
-    return test
+    def __call__(self, obj):
+        assert isinstance(obj, robot.parsing.model.Step)
+        return nodes.inline(text='  '.join(obj.as_list()))
 
 
-def KeywordNode(obj):
-    assert isinstance(obj, robot.parsing.model.UserKeyword)
+class TestCaseNode(Adapter):
 
-    keyword = nodes.section()
+    def __call__(self, obj):
+        assert isinstance(obj, robot.parsing.model.TestCase)
 
-    keyword.append(nodes.title(text=obj.name))
-    keyword['ids'].append(nodes.make_id(obj.name))
+        title = obj.name + '\n' + '-' * len(obj.name) + '\n\n'
+        documentation = obj.doc.value.replace('\\n', '\n')  # fix linebreaks
 
-    doc = obj.doc.value.replace('\\n', '\n')  # fix linebreaks
-    if doc:
-        doc_html = publish_string(doc, writer_name="html")
-        root = etree.fromstring(doc_html)
-        body = root.xpath(
-            "//xhtml:div[@class='document']",
-            namespaces={'xhtml': 'http://www.w3.org/1999/xhtml'}
-        )[0]
-        # XXX: This well leave xmlns-declarations into generaed HTML-tags:
-        html = ''.join(map(lambda node: etree.tostring(node),
-                           body.getchildren()))
-        raw = nodes.raw(text=html, format="html")
-        keyword.append(raw)
+        temp = nodes.Element()
+        lines = statemachine.string2lines(title + documentation)
+        self.context.content.data = lines
+        self.context.state.nested_parse(
+            self.context.content,
+            self.context.content_offset,
+            temp, match_titles=True
+        )
 
-    comment = re.compile("^\s*#.*")
-    all_steps = filter(lambda x: not comment.match(x.as_list()[0]), obj.steps)
+        node = temp.children.pop()
 
-    steps = nodes.literal_block()
-    steps.extend(map(StepNode, all_steps))
+        not_comment = lambda x: not re.compile("^\s*#.*").match(x.as_list()[0])
+        all_steps = filter(not_comment, obj.steps)
 
-    # insert newlines:
-    for i in range(len(all_steps[:-1]), 0, -1):
-        steps.insert(i, nodes.inline(text='\n'))
+        steps = nodes.literal_block()
+        steps.extend(map(StepNode(self.context), all_steps))
 
-    keyword.append(steps)
+        # Insert newlines between steps:
+        for i in range(len(all_steps[:-1]), 0, -1):
+            steps.insert(i, nodes.inline(text='\n'))
+        node.append(steps)
 
-    return keyword
+        return node
+
+
+class KeywordNode(Adapter):
+
+    def __call__(self, obj):
+        assert isinstance(obj, robot.parsing.model.UserKeyword)
+
+        title = obj.name + '\n' + '-' * len(obj.name) + '\n\n'
+        documentation = obj.doc.value.replace('\\n', '\n')  # fix linebreaks
+
+        temp = nodes.Element()
+        lines = statemachine.string2lines(title + documentation)
+        self.context.content.data = lines
+        self.context.state.nested_parse(
+            self.context.content,
+            self.context.content_offset,
+            temp, match_titles=True
+        )
+
+        node = temp.children.pop()
+
+        not_comment = lambda x: not re.compile("^\s*#.*").match(x.as_list()[0])
+        all_steps = filter(not_comment, obj.steps)
+
+        steps = nodes.literal_block()
+        steps.extend(map(StepNode(self.context), all_steps))
+
+        # Insert newlines between steps:
+        for i in range(len(all_steps[:-1]), 0, -1):
+            steps.insert(i, nodes.inline(text='\n'))
+        node.append(steps)
+
+        return node
 
 
 class TestCasesDirective(Directive):
@@ -139,7 +138,7 @@ class TestCasesDirective(Directive):
         tests = filter(lambda x: tag_filter(x), tests) if tags else tests
 
         # Finally, return Docutils nodes for the tests
-        return map(TestCaseNode, tests)
+        return map(TestCaseNode(self), tests)
 
 
 class KeywordsDirective(Directive):
@@ -171,9 +170,9 @@ class KeywordsDirective(Directive):
         else:
             needle = re.compile('.*', re.U)
 
-        keywords = filter(lambda x: needle.match(x.name),
-                          resource.keywords)
-        return map(KeywordNode, keywords)
+        keywords = filter(lambda x: needle.match(x.name), resource.keywords)
+
+        return map(KeywordNode(self), keywords)
 
 
 def setup(app):
