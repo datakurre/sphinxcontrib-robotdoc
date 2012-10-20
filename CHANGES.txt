@@ -1,6 +1,12 @@
 Changelog
 ---------
 
+0.3.2 (2012-10-20)
+------------------
+
+- Refactored to use Docutils' nested_parse instead of publish_string (no more
+  lxml and some support for inter-linking).
+
 0.3.1 (2012-10-18)
 ------------------
 
