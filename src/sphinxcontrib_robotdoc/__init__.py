@@ -131,10 +131,12 @@ class TestCasesDirective(Directive):
         recurse(suite, suite_parent)
 
         # 2) When tags option is set, filter the found tests by given tags
-        tags = map(lambda x: x.strip(),
-                   self.options.get('tags', '').split(','))
+        tags = self.options.get('tags', '').split(',')
+        tags = map(lambda x: x.strip(), tags)
+        tags = filter(lambda x: bool(x), tags)
         tag_filter = lambda x: filter(lambda y: bool(y),
                                       [tag in x.tags.value for tag in tags])
+
         tests = filter(lambda x: tag_filter(x), tests) if tags else tests
 
         # Finally, return Docutils nodes for the tests
