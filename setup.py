@@ -3,8 +3,8 @@ from setuptools import setup, find_packages
 setup(
     name="sphinxcontrib-robotdoc",
     version="0.3.3",
-    description=("Include documentation from Robot Framework test suites and "
-                 "resource files."),
+    description=("Sphinx extension to Include embed Robot Framework test "
+                 "suites and and user keywords into Sphinx documents"),
     long_description=(open("README.rst").read() + "\n" +
                       open("CHANGES.txt").read()),
     # Get more strings from
