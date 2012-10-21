@@ -41,8 +41,8 @@ The test case directive (``robot_tests``) accepts also an option ``tags``,
 which is optional. It should inclue a comma separated list of the tags to be
 used when filtering the tests to be embedded.
 
-*Please, note that he documentation found from the embedded test is parsed
+Please, note that he documentation found from the embedded test is parsed
 using Docutils, as a part of the target document. This differs from `Robot
-Framework`_'s own documentation tools, which expect a custom markup.*
+Framework`_'s own documentation tools, which expect a custom markup.
 
 .. _Robot Framework: http://pypi.python.org/pypi/robotframework
