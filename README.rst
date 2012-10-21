@@ -1,6 +1,12 @@
-This extension is not a much past *proof-of-concept* yet. Rendering of
-generated documentation may still change in the future, but API should remain
-backwards compatible.
+Introduction
+------------
+
+This package provides a new Sphinx extension to embed Robot Framework test
+cases and and user keywords into Sphinx documents.
+
+The extension is not a much past *proof-of-concept* yet. Rendering of generated
+documentation may still change in the future, but API should remain backwards
+compatible.
 
 Usage
 -----
@@ -35,10 +41,8 @@ The test case directive (``robot_tests``) accepts also an option ``tags``,
 which is optional. It should inclue a comma separated list of the tags to be
 used when filtering the tests to be embedded.
 
-.. note::
-
-   The documentation found from the embedded tests and keywords is parsed using
-   Docutils, as a part of the target document. This is different from `Robot
-   Framework`_'s own documentation tools, which support their custom markup.
+*Please, note that he documentation found from the embedded test is parsed
+using Docutils, as a part of the target document. This differs from `Robot
+Framework`_'s own documentation tools, which expect a custom markup.*
 
 .. _Robot Framework: http://pypi.python.org/pypi/robotframework
