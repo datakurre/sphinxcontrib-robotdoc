@@ -65,8 +65,7 @@ class TestCaseNode(Adapter):
 
         node = temp.children.pop()
 
-        not_comment = lambda x: not re.compile("^\s*#.*").match(x.as_list()[0])
-        all_steps = filter(not_comment, obj.steps)
+        all_steps = filter(lambda x: not x.is_comment(), obj.steps)
 
         steps = nodes.literal_block()
         steps.extend(map(StepNode(self.context), all_steps))
@@ -101,8 +100,7 @@ class KeywordNode(Adapter):
 
         node = temp.children.pop()
 
-        not_comment = lambda x: not re.compile("^\s*#.*").match(x.as_list()[0])
-        all_steps = filter(not_comment, obj.steps)
+        all_steps = filter(lambda x: not x.is_comment(), obj.steps)
 
         steps = nodes.literal_block()
         steps.extend(map(StepNode(self.context), all_steps))
