@@ -1,6 +1,11 @@
 Changelog
 ---------
 
+0.3.4 (2012-10-21)
+------------------
+
+- Fixed to use correct title style for test case and keyword titles.
+
 0.3.3 (2012-10-21)
 ------------------
 
