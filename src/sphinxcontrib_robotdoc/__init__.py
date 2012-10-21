@@ -15,6 +15,21 @@ from sphinx.util.compat import (
 import robot
 
 
+def get_title_style(used_styles=[], level=1):
+    if len(used_styles) >= level:
+        return used_styles[level - 1]
+    else:
+        rst_title_styles = [
+            '=', '-', '`', ':' '\'', '"', '~',
+            '^', '_', '*', '+', '#', '<', '>'
+        ]
+        available_styles = filter(lambda x: x not in used_styles,
+                                  rst_title_styles)
+        assert available_styles, ("Maximum section depth has been reached. "
+                                  "No more title styles available.")
+        return available_styles[0]
+
+
 class Adapter(object):
 
     def __init__(self, context):
@@ -33,7 +48,10 @@ class TestCaseNode(Adapter):
     def __call__(self, obj):
         assert isinstance(obj, robot.parsing.model.TestCase)
 
-        title = obj.name + '\n' + '-' * len(obj.name) + '\n\n'
+        used_title_styles = self.context.state.memo.title_styles
+        section_level = self.context.state.memo.section_level + 1
+        title_style = get_title_style(used_title_styles, section_level)
+        title = obj.name + '\n' + title_style * len(obj.name) + '\n\n'
         documentation = obj.doc.value.replace('\\n', '\n')  # fix linebreaks
 
         temp = nodes.Element()
@@ -66,7 +84,10 @@ class KeywordNode(Adapter):
     def __call__(self, obj):
         assert isinstance(obj, robot.parsing.model.UserKeyword)
 
-        title = obj.name + '\n' + '-' * len(obj.name) + '\n\n'
+        used_title_styles = self.context.state.memo.title_styles
+        section_level = self.context.state.memo.section_level + 1
+        title_style = get_title_style(used_title_styles, section_level)
+        title = obj.name + '\n' + title_style * len(obj.name) + '\n\n'
         documentation = obj.doc.value.replace('\\n', '\n')  # fix linebreaks
 
         temp = nodes.Element()
