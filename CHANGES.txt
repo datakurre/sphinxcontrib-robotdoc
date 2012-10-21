@@ -1,6 +1,11 @@
 Changelog
 ---------
 
+0.3.3 (2012-10-21)
+------------------
+
+- Fixed a bug where an empty/missing tags option is not parsed correctly.
+
 0.3.2 (2012-10-20)
 ------------------
 
