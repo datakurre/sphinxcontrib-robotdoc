@@ -114,7 +114,7 @@ class TestCaseNode(Adapter):
         lexer = RobotFrameworkLexer()
         formatter = HtmlFormatter(noclasses=False)
         parsed = highlight(steps, lexer, formatter)
-        if self.context.options.get('style') == 'minimal':
+        if self.context.options.get('style', 'default') == 'default':
             parsed = re.sub('<span class="gh">[^\n]+\n\n', '', parsed)
             parsed = re.sub('<span class="gu">[^<]+</span>', '', parsed)
             parsed = re.sub('<pre><span class="p"></span>', '<pre>', parsed)
@@ -158,7 +158,7 @@ class UserKeywordNode(Adapter):
         lexer = RobotFrameworkLexer()
         formatter = HtmlFormatter(noclasses=False)
         parsed = highlight(steps, lexer, formatter)
-        if self.context.options.get('style') == 'minimal':
+        if self.context.options.get('style', 'default') == 'default':
             parsed = re.sub('<span class="gh">[^\n]+\n\n', '', parsed)
             parsed = re.sub('<span class="gu">[^<]+</span>', '', parsed)
             parsed = re.sub('<pre><span class="p"></span>', '<pre>', parsed)
@@ -174,7 +174,7 @@ Adapter.register(robot.parsing.model.UserKeyword, UserKeywordNode)
 
 def style(argument):
     try:
-        return directives.choice(argument, ('default', 'minimal'))
+        return directives.choice(argument, ('default', 'expanded'))
     except ValueError:
         return 'default'
 
