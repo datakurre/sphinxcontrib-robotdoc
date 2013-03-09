@@ -23,6 +23,7 @@ setup(
     zip_safe=False,
     install_requires=[
         "setuptools",
-        "robotframework>=2.7.1"
+        "robotframework>=2.7.1",
+        "robotframeworklexer"
     ]
 )

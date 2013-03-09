@@ -12,6 +12,10 @@ from sphinx.util.compat import (
     Directive
 )
 
+from pygments import highlight
+from pygments.formatters import HtmlFormatter
+from robotframeworklexer import RobotFrameworkLexer
+
 import robot
 
 
@@ -19,6 +23,7 @@ def get_title_style(used_styles=[], level=1):
     if len(used_styles) >= level:
         return used_styles[level - 1]
     else:
+        # The following list of rst title styles has been copied from docutils:
         rst_title_styles = [
             '=', '-', '`', ':' '\'', '"', '~',
             '^', '_', '*', '+', '#', '<', '>'
@@ -40,7 +45,7 @@ class StepNode(Adapter):
 
     def __call__(self, obj):
         assert isinstance(obj, robot.parsing.model.Step)
-        return nodes.inline(text='  '.join(obj.as_list()))
+        return nodes.inline(text=u'  '.join(obj.as_list()))
 
 
 class TestCaseNode(Adapter):
@@ -67,12 +72,35 @@ class TestCaseNode(Adapter):
 
         all_steps = filter(lambda x: not x.is_comment(), obj.steps)
 
-        steps = nodes.literal_block()
-        steps.extend(map(StepNode(self.context), all_steps))
+        # steps = nodes.literal_block()
+        # steps.extend(map(StepNode(self.context), all_steps))
+
+        steps = u''
+        for step in all_steps:
+            steps += '  '.join(step.as_list()) + '\n'
+
+        lexer = RobotFrameworkLexer()
+        formatter = HtmlFormatter(noclasses=True)  # use inline CSS styles
+        parsed = highlight(steps, lexer, formatter)
+        steps = nodes.raw('', parsed, format='html')
+
+        steps = u'***Test Cases***\n\n%s\n' % obj.name
+        for step in all_steps:
+            concat = '  '.join(step.as_list()) + '\n'
+            if concat.startswith('And'):
+                steps += '      ' + '  '.join(step.as_list()) + '\n'
+            else:
+                steps += '    ' + '  '.join(step.as_list()) + '\n'
+        steps = re.sub('^    And(.*)$', '        And\\1', steps)
+
+        lexer = RobotFrameworkLexer()
+        formatter = HtmlFormatter(noclasses=True)  # use inline CSS styles
+        parsed = highlight(steps, lexer, formatter)
+        steps = nodes.raw('', parsed, format='html')
 
         # Insert newlines between steps:
-        for i in range(len(all_steps[:-1]), 0, -1):
-            steps.insert(i, nodes.inline(text='\n'))
+        # for i in range(len(all_steps[:-1]), 0, -1):
+        #     steps.insert(i, nodes.inline(text='\n'))
         node.append(steps)
 
         return node
@@ -108,6 +136,16 @@ class KeywordNode(Adapter):
         # Insert newlines between steps:
         for i in range(len(all_steps[:-1]), 0, -1):
             steps.insert(i, nodes.inline(text='\n'))
+
+        steps = u'***Keywords***\n\n%s\n' % obj.name
+        for step in all_steps:
+            steps += '    ' + '  '.join(step.as_list()) + '\n'
+
+        lexer = RobotFrameworkLexer()
+        formatter = HtmlFormatter(noclasses=True)  # use inline CSS styles
+        parsed = highlight(steps, lexer, formatter)
+        steps = nodes.raw('', parsed, format='html')
+
         node.append(steps)
 
         return node
