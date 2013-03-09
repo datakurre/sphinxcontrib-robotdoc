@@ -114,7 +114,7 @@ class TestCaseNode(Adapter):
         lexer = RobotFrameworkLexer()
         formatter = HtmlFormatter(noclasses=False)
         parsed = highlight(steps, lexer, formatter)
-        if self.context.options.get('strip') == 'yes':
+        if self.context.options.get('style') == 'minimal':
             parsed = re.sub('<span class="gh">[^\n]+\n\n', '', parsed)
             parsed = re.sub('<span class="gu">[^<]+</span>', '', parsed)
             parsed = re.sub('<pre><span class="p"></span>', '<pre>', parsed)
@@ -158,7 +158,7 @@ class UserKeywordNode(Adapter):
         lexer = RobotFrameworkLexer()
         formatter = HtmlFormatter(noclasses=False)
         parsed = highlight(steps, lexer, formatter)
-        if self.context.options.get('strip') == 'yes':
+        if self.context.options.get('style') == 'minimal':
             parsed = re.sub('<span class="gh">[^\n]+\n\n', '', parsed)
             parsed = re.sub('<span class="gu">[^<]+</span>', '', parsed)
             parsed = re.sub('<pre><span class="p"></span>', '<pre>', parsed)
@@ -172,8 +172,11 @@ class UserKeywordNode(Adapter):
 Adapter.register(robot.parsing.model.UserKeyword, UserKeywordNode)
 
 
-def yesno(argument):
-    return directives.choice(argument, ('yes', 'no'))
+def style(argument):
+    try:
+        return directives.choice(argument, ('default', 'minimal'))
+    except ValueError:
+        return 'default'
 
 
 class TestCasesDirective(Directive):
@@ -185,7 +188,7 @@ class TestCasesDirective(Directive):
         'source': directives.path,
         'suite': directives.path,  # alias for 'source'
         'tags': directives.unchanged,
-        'strip': yesno
+        'style': style
     }
 
     def run(self):
@@ -233,7 +236,7 @@ class KeywordsDirective(Directive):
         'source': directives.path,
         'suite': directives.path,  # alias for 'source'
         'resource': directives.path,  # alias for 'source'
-        'strip': yesno
+        'style': style
     }
 
     def run(self):
