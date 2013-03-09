@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
-"""Robot Framework AutoDoc for Sphinx"""
+"""Robot Framework AutoDoc for Sphinx
+"""
 
 import re
 import os
@@ -13,6 +14,10 @@ from sphinx.util.compat import (
 )
 
 import robot
+
+
+def flatten(list_):
+    return [item for sublist in list_ for item in sublist]
 
 
 def get_title_style(used_styles=[], level=1):
@@ -32,21 +37,51 @@ def get_title_style(used_styles=[], level=1):
 
 class Adapter(object):
 
-    def __init__(self, context):
+    registry = {}
+
+    def __init__(self, context, *args):
         self.context = context
+        self.args = args
+
+    def __call__(self, obj):
+        return self.registry[obj.__class__](self.context, *self.args)(obj)
+
+    @classmethod
+    def register(cls, klass, adapter):
+        cls.registry[klass] = adapter
 
 
 class StepNode(Adapter):
 
+    def __init__(self, context, prefix=''):
+        super(StepNode, self).__init__(context)
+        self.prefix = prefix
+
     def __call__(self, obj):
-        assert isinstance(obj, robot.parsing.model.Step)
-        return nodes.inline(text='  '.join(obj.as_list()))
+        prefix = self.prefix
+        value = '  '.join(obj.as_list())
+        if value.startswith('When ') or value.startswith('Then '):
+            prefix = ' ' + prefix
+        elif value.startswith('And '):
+            prefix = '  ' + prefix
+        return [nodes.inline(text=prefix + value)]
+
+Adapter.register(robot.parsing.model.Step, StepNode)
+
+
+class ForLoopNode(Adapter):
+
+    def __call__(self, obj):
+        all_steps = filter(lambda x: not x.is_comment(), obj.steps)
+        return StepNode(self.context)(obj) + flatten(
+            map(Adapter(self.context, '\\    '), all_steps))
+
+Adapter.register(robot.parsing.model.ForLoop, ForLoopNode)
 
 
 class TestCaseNode(Adapter):
 
     def __call__(self, obj):
-        assert isinstance(obj, robot.parsing.model.TestCase)
 
         used_title_styles = self.context.state.memo.title_styles
         section_level = self.context.state.memo.section_level + 1
@@ -68,20 +103,21 @@ class TestCaseNode(Adapter):
         all_steps = filter(lambda x: not x.is_comment(), obj.steps)
 
         steps = nodes.literal_block()
-        steps.extend(map(StepNode(self.context), all_steps))
+        steps.extend(flatten(map(Adapter(self.context), all_steps)))
 
         # Insert newlines between steps:
-        for i in range(len(all_steps[:-1]), 0, -1):
+        for i in range(len(steps[:-1]), 0, -1):
             steps.insert(i, nodes.inline(text='\n'))
         node.append(steps)
 
-        return node
+        return [node]
+
+Adapter.register(robot.parsing.model.TestCase, TestCaseNode)
 
 
-class KeywordNode(Adapter):
+class UserKeywordNode(Adapter):
 
     def __call__(self, obj):
-        assert isinstance(obj, robot.parsing.model.UserKeyword)
 
         used_title_styles = self.context.state.memo.title_styles
         section_level = self.context.state.memo.section_level + 1
@@ -103,14 +139,16 @@ class KeywordNode(Adapter):
         all_steps = filter(lambda x: not x.is_comment(), obj.steps)
 
         steps = nodes.literal_block()
-        steps.extend(map(StepNode(self.context), all_steps))
+        steps.extend(flatten(map(Adapter(self.context), all_steps)))
 
         # Insert newlines between steps:
-        for i in range(len(all_steps[:-1]), 0, -1):
+        for i in range(len(steps[:-1]), 0, -1):
             steps.insert(i, nodes.inline(text='\n'))
         node.append(steps)
 
-        return node
+        return [node]
+
+Adapter.register(robot.parsing.model.UserKeyword, UserKeywordNode)
 
 
 class TestCasesDirective(Directive):
@@ -159,7 +197,7 @@ class TestCasesDirective(Directive):
         tests = filter(lambda x: tag_filter(x), tests) if tags else tests
 
         # Finally, return Docutils nodes for the tests
-        return map(TestCaseNode(self), tests)
+        return flatten(map(Adapter(self), tests))
 
 
 class KeywordsDirective(Directive):
@@ -193,7 +231,7 @@ class KeywordsDirective(Directive):
 
         keywords = filter(lambda x: needle.match(x.name), resource.keywords)
 
-        return map(KeywordNode(self), keywords)
+        return flatten(map(Adapter(self), keywords))
 
 
 def setup(app):
