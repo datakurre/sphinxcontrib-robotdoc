@@ -114,10 +114,11 @@ class TestCaseNode(Adapter):
         lexer = RobotFrameworkLexer()
         formatter = HtmlFormatter(noclasses=False)
         parsed = highlight(steps, lexer, formatter)
-        parsed = re.sub('<span class="gh">[^\n]+\n\n', '', parsed)
-        parsed = re.sub('<span class="gu">[^<]+</span>', '', parsed)
-        parsed = re.sub('<pre><span class="p"></span>', '<pre>', parsed)
-        parsed = re.sub('<span class="p">    ', '<span class="p">', parsed)
+        if self.context.options.get('strip') == 'yes':
+            parsed = re.sub('<span class="gh">[^\n]+\n\n', '', parsed)
+            parsed = re.sub('<span class="gu">[^<]+</span>', '', parsed)
+            parsed = re.sub('<pre><span class="p"></span>', '<pre>', parsed)
+            parsed = re.sub('<span class="p">    ', '<span class="p">', parsed)
         steps = nodes.raw('', parsed, format='html')
 
         node.append(steps)
@@ -157,10 +158,11 @@ class UserKeywordNode(Adapter):
         lexer = RobotFrameworkLexer()
         formatter = HtmlFormatter(noclasses=False)
         parsed = highlight(steps, lexer, formatter)
-        parsed = re.sub('<span class="gh">[^\n]+\n\n', '', parsed)
-        parsed = re.sub('<span class="gu">[^<]+</span>', '', parsed)
-        parsed = re.sub('<pre><span class="p"></span>', '<pre>', parsed)
-        parsed = re.sub('<span class="p">    ', '<span class="p">', parsed)
+        if self.context.options.get('strip') == 'yes':
+            parsed = re.sub('<span class="gh">[^\n]+\n\n', '', parsed)
+            parsed = re.sub('<span class="gu">[^<]+</span>', '', parsed)
+            parsed = re.sub('<pre><span class="p"></span>', '<pre>', parsed)
+            parsed = re.sub('<span class="p">    ', '<span class="p">', parsed)
         steps = nodes.raw('', parsed, format='html')
 
         node.append(steps)
@@ -168,6 +170,10 @@ class UserKeywordNode(Adapter):
         return [node]
 
 Adapter.register(robot.parsing.model.UserKeyword, UserKeywordNode)
+
+
+def yesno(argument):
+    return directives.choice(argument, ('yes', 'no'))
 
 
 class TestCasesDirective(Directive):
@@ -179,6 +185,7 @@ class TestCasesDirective(Directive):
         'source': directives.path,
         'suite': directives.path,  # alias for 'source'
         'tags': directives.unchanged,
+        'strip': yesno
     }
 
     def run(self):
@@ -226,6 +233,7 @@ class KeywordsDirective(Directive):
         'source': directives.path,
         'suite': directives.path,  # alias for 'source'
         'resource': directives.path,  # alias for 'source'
+        'strip': yesno
     }
 
     def run(self):
