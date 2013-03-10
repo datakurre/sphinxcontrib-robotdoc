@@ -1,15 +1,10 @@
 Changelog
 ---------
 
-0.4.0-rc.2 (unreleased)
------------------------
+0.4.0 (2013-03-10)
+------------------
 
-- Nothing changed yet.
-
-
-0.4.0-rc.1 (2013-03-09)
------------------------
-
+- Add new directives robot_source, robot_settings and robot_variables
 - Fix relative path issue [fixes #2]
 - Refactor and add support for ForLoop-nodes [fixes #1]
 - Add align for BDD-keywords
