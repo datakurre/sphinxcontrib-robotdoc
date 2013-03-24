@@ -1,11 +1,10 @@
 Changelog
 ---------
 
-0.4.1 (unreleased)
+0.4.1 (2013-03-24)
 ------------------
 
-- Nothing changed yet.
-
+- Add Pygments-formatted output also for LaTex output [fixes #4]
 
 0.4.0 (2013-03-10)
 ------------------
