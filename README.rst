@@ -43,7 +43,7 @@ which is optional. It should inclue a comma separated list of the tags to be
 used when filtering the tests to be embedded.
 
 Both directives take an optional ``style``-option. When ``style`` is set
-to ``extended`` the output will include headings such as the table name and
+to ``expanded`` the output will include headings such as the table name and
 test case or keyword name.
 
 Please, note that he documentation found from the embedded test is parsed
@@ -75,5 +75,20 @@ documentation parsed as reStructuredText) for a test suite a resource file::
        :source: ../src/my_package/tests/acceptance/my_suite.txt
 
 Also directives ``robot_settings`` and ``robot_variables`` take an optional
-``style``-option. When ``style`` is set to ``extended`` the output will the
+``style``-option. When ``style`` is set to ``expanded`` the output will the
 table name.
+
+LaTeX output
+------------
+
+LaTeX output is based on Pygments LatexFormatter, which requires custom
+style definitions to be injeced into latex document preamble. That's done by
+default, but when Sphinx ``latex_preamble`` setting is set manually, it
+should include the following::
+
+   from pygments.formatters import LatexFormatter
+
+   latex_elements['latex_preamble'] = '''\
+   \usepackage{fancyvrb}
+   \usepackage{color}
+   ''' + LatexFormatter().get_style_defs()

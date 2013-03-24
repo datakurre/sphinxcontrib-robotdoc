@@ -14,7 +14,10 @@ from sphinx.util.compat import (
 )
 
 from pygments import highlight
-from pygments.formatters import HtmlFormatter
+from pygments.formatters import (
+    HtmlFormatter,
+    LatexFormatter
+)
 from robotframeworklexer import RobotFrameworkLexer
 
 import robot
@@ -119,9 +122,14 @@ class TestCaseNode(Adapter):
             parsed = re.sub('<span class="gu">[^<]+</span>', '', parsed)
             parsed = re.sub('<pre><span class="p"></span>', '<pre>', parsed)
             parsed = re.sub('<span class="p">    ', '<span class="p">', parsed)
-        steps = nodes.raw('', parsed, format='html')
+        node.append(nodes.raw('', parsed, format='html'))
 
-        node.append(steps)
+        formatter = LatexFormatter()
+        parsed = highlight(steps, lexer, formatter)
+        if self.context.options.get('style', 'default') == 'default':
+            parsed = re.sub('\\\PY{g\+gh}{[^}]+}\n\n', '', parsed)
+            parsed = re.sub('\\\PY{g\+gu}{[^}]+}\n', '', parsed)
+        node.append(nodes.raw('', parsed, format='latex'))
 
         return [node]
 
@@ -163,9 +171,14 @@ class UserKeywordNode(Adapter):
             parsed = re.sub('<span class="gu">[^<]+</span>', '', parsed)
             parsed = re.sub('<pre><span class="p"></span>', '<pre>', parsed)
             parsed = re.sub('<span class="p">    ', '<span class="p">', parsed)
-        steps = nodes.raw('', parsed, format='html')
+        node.append(nodes.raw('', parsed, format='html'))
 
-        node.append(steps)
+        formatter = LatexFormatter()
+        parsed = highlight(steps, lexer, formatter)
+        if self.context.options.get('style', 'default') == 'default':
+            parsed = re.sub('\\\PY{g\+gh}{[^}]+}\n\n', '', parsed)
+            parsed = re.sub('\\\PY{g\+gu}{[^}]+}\n', '', parsed)
+        node.append(nodes.raw('', parsed, format='latex'))
 
         return [node]
 
@@ -194,13 +207,19 @@ class SourceDirective(Directive):
         path = self.options.get('source', self.options.get('suite'))
         filename = os.path.normpath(os.path.join(source_directory, path))
 
+        lexer = RobotFrameworkLexer()
+
         with open(filename, 'r') as source:
-            lexer = RobotFrameworkLexer()
             formatter = HtmlFormatter(noclasses=False)
             parsed = highlight(source.read(), lexer, formatter)
+        html_node = nodes.raw('', parsed, format='html')
 
-        node = nodes.raw('', parsed, format='html')
-        return [node]
+        with open(filename, 'r') as source:
+            formatter = LatexFormatter()
+            parsed = highlight(source.read(), lexer, formatter)
+        latex_node = nodes.raw('', parsed, format='latex')
+
+        return html_node + latex_node
 
 
 class SettingsDirective(Directive):
@@ -243,9 +262,9 @@ class SettingsDirective(Directive):
             doc_node = temp.children.pop()
         else:
             doc_node = None
+        lexer = RobotFrameworkLexer()
 
         with open(filename, 'r') as source:
-            lexer = RobotFrameworkLexer()
             formatter = HtmlFormatter(noclasses=False)
             parsed = highlight(source.read(), lexer, formatter)
 
@@ -272,12 +291,42 @@ class SettingsDirective(Directive):
         if self.options.get('style', 'default') == 'default':
             parsed = re.sub('<span class="gh">[^\n]+\n\n', '', parsed)
 
-        settings_node = nodes.raw('', parsed, format='html')
+        html_settings_node = nodes.raw('', parsed, format='html')
+
+        with open(filename, 'r') as source:
+            formatter = LatexFormatter()
+            parsed = highlight(source.read(), lexer, formatter)
+
+        # Remove everything after the settings table
+        removable_sections = ['Variables', 'Test Cases', 'Keywords']
+        for section in removable_sections:
+            regex = re.compile(
+                '\\\PY{g\+gh}{\*\*\* %s \*\*\*}.*\\\end{Verbatim}\n*$' % (
+                    section),
+                re.I + re.S + re.M
+            )
+            parsed = regex.sub('\end{Verbatim}\n', parsed)
+
+        # Remove documentation from the settings table
+        if parsed.find('\\PY{k+kn}{Documentation}') >= 0:
+            start = parsed.find('\\PY{k+kn}{Documentation}')
+            if parsed[start + 24:].find('\PY{k+kn}') >= 0:
+                end = parsed[start + 24:].find('\PY{k+kn}') + 24
+            else:
+                end = parsed[start:].find('\\end{Verbatim}')
+            parsed = parsed[:start] + parsed[start + end:]
+
+        # Remove heading from the settings table when required
+        if self.options.get('style', 'default') == 'default':
+            parsed = re.sub('\\\PY{g\+gh}{[^}]+}\n\n', '', parsed)
+            parsed = re.sub('\\\PY{g\+gu}{[^}]+}\n', '', parsed)
+
+        latex_settings_node = nodes.raw('', parsed, format='latex')
 
         if doc_node:
-            return [doc_node, settings_node]
+            return [doc_node, html_settings_node, latex_settings_node]
         else:
-            return [settings_node]
+            return [html_settings_node, latex_settings_node]
 
 
 class VariablesDirective(Directive):
@@ -322,9 +371,36 @@ class VariablesDirective(Directive):
         if self.options.get('style', 'default') == 'default':
             parsed = re.sub('<span class="gh">[^\n]+\n\n', '', parsed)
 
-        variables_node = nodes.raw('', parsed, format='html')
+        html_variables_node = nodes.raw('', parsed, format='html')
 
-        return [variables_node]
+        with open(filename, 'r') as source:
+            formatter = LatexFormatter()
+            parsed = highlight(source.read(), lexer, formatter)
+
+        # Remove everything but the variables table
+        removable_sections = ['Test Cases', 'Keywords']
+        regex = re.compile(
+            '(\\\\begin{Verbatim}\[[^\]]*\]\n).*'
+            '(\\\\PY{g\+gh}{\*\*\*\sVariables\s\*\*\*})',
+            re.I + re.S + re.M
+        )
+        parsed = regex.sub('\\1\\2', parsed)
+        for section in removable_sections:
+            regex = re.compile(
+                '\\\PY{g\+gh}{\*\*\* %s \*\*\*}.*\\\end{Verbatim}\n*$' % (
+                    section),
+                re.I + re.S + re.M
+            )
+            parsed = regex.sub('\end{Verbatim}\n', parsed)
+
+        # Remove heading from the settings table when required
+        if self.options.get('style', 'default') == 'default':
+            parsed = re.sub('\\\PY{g\+gh}{[^}]+}\n\n', '', parsed)
+            parsed = re.sub('\\\PY{g\+gu}{[^}]+}\n', '', parsed)
+
+        latex_variables_node = nodes.raw('', parsed, format='latex')
+
+        return [html_variables_node, latex_variables_node]
 
 
 class TestCasesDirective(Directive):
@@ -409,6 +485,10 @@ class KeywordsDirective(Directive):
 
 
 def setup(app):
+    app.config.latex_preamble += '''\
+\usepackage{fancyvrb}
+\usepackage{color}
+''' + LatexFormatter().get_style_defs()
     app.add_directive('robot_source', SourceDirective)
     app.add_directive('robot_settings', SettingsDirective)
     app.add_directive('robot_variables', VariablesDirective)
