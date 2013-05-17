@@ -1,30 +1,37 @@
 # -*- coding: utf-8 -*-
 """Robot Framework AutoDoc for Sphinx
 """
-
-import re
 import os
+import re
+import pkg_resources
 
+import robot
 from docutils import statemachine
 from docutils.parsers.rst import directives
-
-from sphinx.util.compat import (
-    nodes,
-    Directive
-)
-
 from pygments import highlight
 from pygments.formatters import (
     HtmlFormatter,
     LatexFormatter
 )
 from robotframeworklexer import RobotFrameworkLexer
-
-import robot
+from sphinx.util.compat import (
+    nodes,
+    Directive
+)
 
 
 def flatten(list_):
     return [item for sublist in list_ for item in sublist]
+
+
+def resolve_path(spec, cwd):
+    if os.path.isfile(os.path.normpath(os.path.join(cwd, spec))):
+        return os.path.normpath(os.path.join(cwd, spec))
+    elif spec.count(':') and pkg_resources.resource_exists(
+            *spec.split(':', 1)):
+        return pkg_resources.resource_filename(*spec.split(':', 1))
+    else:
+        return spec
 
 
 def get_title_style(used_styles=[], level=1):
@@ -203,18 +210,19 @@ class SourceDirective(Directive):
     }
 
     def run(self):
-        source_directory = os.path.dirname(self.state.document.current_source)
-        path = self.options.get('source', self.options.get('suite'))
-        filename = os.path.normpath(os.path.join(source_directory, path))
+        path = resolve_path(
+            self.options.get('source', self.options.get('suite')),
+            os.path.dirname(self.state.document.current_source)
+        )
 
         lexer = RobotFrameworkLexer()
 
-        with open(filename, 'r') as source:
+        with open(path, 'r') as source:
             formatter = HtmlFormatter(noclasses=False)
             parsed = highlight(source.read(), lexer, formatter)
         html_node = nodes.raw('', parsed, format='html')
 
-        with open(filename, 'r') as source:
+        with open(path, 'r') as source:
             formatter = LatexFormatter()
             parsed = highlight(source.read(), lexer, formatter)
         latex_node = nodes.raw('', parsed, format='latex')
@@ -235,15 +243,19 @@ class SettingsDirective(Directive):
     }
 
     def run(self):
-        source_directory = os.path.dirname(self.state.document.current_source)
-        path = self.options.get(
-            'source', self.options.get('suite', self.options.get('resource')))
-        filename = os.path.normpath(os.path.join(source_directory, path))
+        path = resolve_path(
+            self.options.get(
+                'source', self.options.get(
+                'suite', self.options.get(
+                'resource'))
+            ),
+            os.path.dirname(self.state.document.current_source)
+        )
 
         try:
-            resource = robot.parsing.TestData(source=filename)
+            resource = robot.parsing.TestData(source=path)
         except robot.errors.DataError:
-            resource = robot.parsing.ResourceFile(source=filename)
+            resource = robot.parsing.ResourceFile(source=path)
             resource.populate()
 
         obj = resource.setting_table
@@ -264,7 +276,7 @@ class SettingsDirective(Directive):
             doc_node = None
         lexer = RobotFrameworkLexer()
 
-        with open(filename, 'r') as source:
+        with open(path, 'r') as source:
             formatter = HtmlFormatter(noclasses=False)
             parsed = highlight(source.read(), lexer, formatter)
 
@@ -293,7 +305,7 @@ class SettingsDirective(Directive):
 
         html_settings_node = nodes.raw('', parsed, format='html')
 
-        with open(filename, 'r') as source:
+        with open(path, 'r') as source:
             formatter = LatexFormatter()
             parsed = highlight(source.read(), lexer, formatter)
 
@@ -342,12 +354,16 @@ class VariablesDirective(Directive):
     }
 
     def run(self):
-        source_directory = os.path.dirname(self.state.document.current_source)
-        path = self.options.get(
-            'source', self.options.get('suite', self.options.get('resource')))
-        filename = os.path.normpath(os.path.join(source_directory, path))
+        path = resolve_path(
+            self.options.get(
+                'source', self.options.get(
+                'suite', self.options.get(
+                'resource'))
+            ),
+            os.path.dirname(self.state.document.current_source)
+        )
 
-        with open(filename, 'r') as source:
+        with open(path, 'r') as source:
             lexer = RobotFrameworkLexer()
             formatter = HtmlFormatter(noclasses=False)
             parsed = highlight(source.read(), lexer, formatter)
@@ -373,7 +389,7 @@ class VariablesDirective(Directive):
 
         html_variables_node = nodes.raw('', parsed, format='html')
 
-        with open(filename, 'r') as source:
+        with open(path, 'r') as source:
             formatter = LatexFormatter()
             parsed = highlight(source.read(), lexer, formatter)
 
@@ -416,10 +432,12 @@ class TestCasesDirective(Directive):
     }
 
     def run(self):
-        source_directory = os.path.dirname(self.state.document.current_source)
-        path = self.options.get('source', self.options.get('suite'))
-        filename = os.path.normpath(os.path.join(source_directory, path))
-        suite = robot.parsing.TestData(source=filename)
+        path = resolve_path(
+            self.options.get('source', self.options.get('suite')),
+            os.path.dirname(self.state.document.current_source)
+        )
+
+        suite = robot.parsing.TestData(source=path)
 
         if self.content:
             needle = re.compile(self.content[0].strip(), re.U)
@@ -427,7 +445,7 @@ class TestCasesDirective(Directive):
             needle = re.compile('.*', re.U)
 
         tests = []
-        suite_parent = os.path.dirname(filename)
+        suite_parent = os.path.dirname(path)
 
         # 1) Recurse through the test suite and filter tests by name
         def recurse(child_suite, suite_parent):
@@ -464,14 +482,19 @@ class KeywordsDirective(Directive):
     }
 
     def run(self):
-        source_directory = os.path.dirname(self.state.document.current_source)
-        path = self.options.get(
-            'source', self.options.get('suite', self.options.get('resource')))
-        filename = os.path.normpath(os.path.join(source_directory, path))
+        path = resolve_path(
+            self.options.get(
+                'source', self.options.get(
+                'suite', self.options.get(
+                'resource'))
+            ),
+            os.path.dirname(self.state.document.current_source)
+        )
+
         try:
-            resource = robot.parsing.TestData(source=filename)
+            resource = robot.parsing.TestData(source=path)
         except robot.errors.DataError:
-            resource = robot.parsing.ResourceFile(source=filename)
+            resource = robot.parsing.ResourceFile(source=path)
             resource.populate()
 
         if self.content:
