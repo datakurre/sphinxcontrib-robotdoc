@@ -227,7 +227,7 @@ class SourceDirective(Directive):
             parsed = highlight(source.read(), lexer, formatter)
         latex_node = nodes.raw('', parsed, format='latex')
 
-        return html_node + latex_node
+        return [html_node, latex_node]
 
 
 class SettingsDirective(Directive):
