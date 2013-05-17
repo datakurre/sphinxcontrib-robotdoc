@@ -1,18 +1,15 @@
 syntax: glob
-
-bin
-parts
-develop-eggs
-var
-
-dist
-erl_crash.dump
-
 *.egg-info
-*.pyc
 *.mo
+*.pyc
 *~
-
 .DS_Store
 .installed.cfg
 .mr.developer.cfg
+.ropeproject
+bin
+develop-eggs
+dist
+erl_crash.dump
+parts
+var
