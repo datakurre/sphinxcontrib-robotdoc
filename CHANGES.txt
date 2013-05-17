@@ -1,11 +1,14 @@
 Changelog
 ---------
 
-0.4.2 (unreleased)
+0.5.0 (2013-05-17)
 ------------------
 
-- Nothing changed yet.
-
+- Add support for resolving 'package:filename.robot'-paths using
+  pkg_resources.resource_filename-method
+  [Asko Soukka]
+- Fix bug where source directive resulted escaped html markup
+  [Asko Soukka]
 
 0.4.1 (2013-03-24)
 ------------------
