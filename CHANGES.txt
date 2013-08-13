@@ -1,11 +1,12 @@
 Changelog
 ---------
 
-0.5.1 (unreleased)
+0.5.1 (2013-08-13)
 ------------------
 
-- Nothing changed yet.
-
+- Fix bug where multiline documentation in settings-part was not completely
+  included
+  [Pawel Sabat]
 
 0.5.0 (2013-05-17)
 ------------------
