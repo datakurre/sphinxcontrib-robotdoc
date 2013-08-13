@@ -271,9 +271,9 @@ class SettingsDirective(Directive):
         )
 
         if temp.children:
-            doc_node = temp.children.pop()
+            doc_node_list = temp.children[:]
         else:
-            doc_node = None
+            doc_node_list = []
         lexer = RobotFrameworkLexer()
 
         with open(path, 'r') as source:
@@ -335,8 +335,15 @@ class SettingsDirective(Directive):
 
         latex_settings_node = nodes.raw('', parsed, format='latex')
 
-        if doc_node:
-            return [doc_node, html_settings_node, latex_settings_node]
+        if len(doc_node_list)>0:
+            out = []
+
+            for node in doc_node_list:
+                out.append(node)
+            out.append(html_settings_node)
+            out.append(latex_settings_node)
+
+            return out
         else:
             return [html_settings_node, latex_settings_node]
 
