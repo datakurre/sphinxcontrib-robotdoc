@@ -164,6 +164,9 @@ class UserKeywordNode(Adapter):
 
         node = temp.children.pop()
 
+        if self.context.options.get('style', 'default') == 'minimal':
+            return [node]
+
         all_steps = filter(lambda x: not x.is_comment(), obj.steps)
 
         steps = u'***Keywords***\n\n%s\n' % obj.name
@@ -194,7 +197,8 @@ Adapter.register(robot.parsing.model.UserKeyword, UserKeywordNode)
 
 def style(argument):
     try:
-        return directives.choice(argument, ('default', 'expanded'))
+        return directives.choice(
+            argument, ('minimal', 'default', 'expanded'))
     except ValueError:
         return 'default'
 
@@ -335,7 +339,7 @@ class SettingsDirective(Directive):
 
         latex_settings_node = nodes.raw('', parsed, format='latex')
 
-        if len(doc_node_list)>0:
+        if len(doc_node_list) > 0:
             out = []
 
             for node in doc_node_list:
