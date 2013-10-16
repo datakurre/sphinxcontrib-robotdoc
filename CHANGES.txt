@@ -1,11 +1,12 @@
 Changelog
----------
+=========
 
-0.6.1 (unreleased)
+0.7.0 (2013-10-16)
 ------------------
 
-- Nothing changed yet.
-
+- Rename directives to ``robot-source``, ``robot-settings``,
+  ``robot-variables``, ``robot-tests`` and ``robot-keywords``, but keep
+  the old directives for backwards compatibility.
 
 0.6.0 (2013-09-28)
 ------------------

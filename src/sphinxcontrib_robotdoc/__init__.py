@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Robot Framework AutoDoc for Sphinx
-"""
+"""Robot Framework AutoDoc for Sphinx"""
 import os
 import re
 import pkg_resources
@@ -115,6 +114,9 @@ class TestCaseNode(Adapter):
 
         node = temp.children.pop()
 
+        if self.context.options.get('style', 'default') == 'minimal':
+            return [node]
+
         all_steps = filter(lambda x: not x.is_comment(), obj.steps)
 
         steps = u'***Test Cases***\n\n%s\n' % obj.name
@@ -204,8 +206,7 @@ def style(argument):
 
 
 class SourceDirective(Directive):
-    """Robot test suite directive
-    """
+    """Robot  directive"""
     has_content = False
 
     option_spec = {
@@ -235,8 +236,7 @@ class SourceDirective(Directive):
 
 
 class SettingsDirective(Directive):
-    """Robot settings directive
-    """
+    """Robot settings directive"""
     has_content = False
 
     option_spec = {
@@ -353,8 +353,7 @@ class SettingsDirective(Directive):
 
 
 class VariablesDirective(Directive):
-    """Robot variables directive
-    """
+    """Robot variables directive"""
     has_content = False
 
     option_spec = {
@@ -431,8 +430,7 @@ class VariablesDirective(Directive):
 
 
 class TestCasesDirective(Directive):
-    """Robot test cases directive
-    """
+    """Robot test cases directive"""
     has_content = True
 
     option_spec = {
@@ -481,8 +479,7 @@ class TestCasesDirective(Directive):
 
 
 class KeywordsDirective(Directive):
-    """Robot user keywords directive
-    """
+    """Robot user keywords directive"""
     has_content = True
 
     option_spec = {
@@ -519,12 +516,22 @@ class KeywordsDirective(Directive):
 
 
 def setup(app):
-    app.config.latex_preamble += '''\
-\usepackage{fancyvrb}
-\usepackage{color}
-''' + LatexFormatter().get_style_defs()
+    # Directives:
+    app.add_directive('robot-source', SourceDirective)
+    app.add_directive('robot-settings', SettingsDirective)
+    app.add_directive('robot-variables', VariablesDirective)
+    app.add_directive('robot-tests', TestCasesDirective)
+    app.add_directive('robot-keywords', KeywordsDirective)
+
+    # BBB:
     app.add_directive('robot_source', SourceDirective)
     app.add_directive('robot_settings', SettingsDirective)
     app.add_directive('robot_variables', VariablesDirective)
     app.add_directive('robot_tests', TestCasesDirective)
     app.add_directive('robot_keywords', KeywordsDirective)
+
+    # LaTeX-support:
+    app.config.latex_preamble += '''\
+\usepackage{fancyvrb}
+\usepackage{color}
+''' + LatexFormatter().get_style_defs()
