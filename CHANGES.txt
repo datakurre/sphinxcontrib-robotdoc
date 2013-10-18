@@ -1,7 +1,7 @@
 Changelog
 =========
 
-0.7.1 (unreleased)
+0.7.1 (2013-10-18)
 ------------------
 
 - Drop dependency on robotframeworklexer, because it's included in Pygments
