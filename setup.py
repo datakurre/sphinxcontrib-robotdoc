@@ -24,6 +24,5 @@ setup(
     install_requires=[
         "setuptools",
         "robotframework>=2.7.1",
-        "robotframeworklexer"
     ]
 )
