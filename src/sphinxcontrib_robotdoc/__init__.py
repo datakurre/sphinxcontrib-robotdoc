@@ -8,11 +8,11 @@ import robot
 from docutils import statemachine
 from docutils.parsers.rst import directives
 from pygments import highlight
+from pygments.lexers import get_lexer_by_name
 from pygments.formatters import (
     HtmlFormatter,
     LatexFormatter
 )
-from robotframeworklexer import RobotFrameworkLexer
 from sphinx.util.compat import (
     nodes,
     Directive
@@ -123,7 +123,7 @@ class TestCaseNode(Adapter):
         for step in flatten(map(Adapter(self.context), all_steps)):
             steps += ' ' * 4 + step.astext() + '\n'
 
-        lexer = RobotFrameworkLexer()
+        lexer = get_lexer_by_name('robotframework')
         formatter = HtmlFormatter(noclasses=False)
         parsed = highlight(steps, lexer, formatter)
         if self.context.options.get('style', 'default') == 'default':
@@ -175,7 +175,7 @@ class UserKeywordNode(Adapter):
         for step in flatten(map(Adapter(self.context), all_steps)):
             steps += ' ' * 4 + step.astext() + '\n'
 
-        lexer = RobotFrameworkLexer()
+        lexer = get_lexer_by_name('robotframework')
         formatter = HtmlFormatter(noclasses=False)
         parsed = highlight(steps, lexer, formatter)
         if self.context.options.get('style', 'default') == 'default':
@@ -220,7 +220,7 @@ class SourceDirective(Directive):
             os.path.dirname(self.state.document.current_source)
         )
 
-        lexer = RobotFrameworkLexer()
+        lexer = get_lexer_by_name('robotframework')
 
         with open(path, 'r') as source:
             formatter = HtmlFormatter(noclasses=False)
@@ -278,7 +278,7 @@ class SettingsDirective(Directive):
             doc_node_list = temp.children[:]
         else:
             doc_node_list = []
-        lexer = RobotFrameworkLexer()
+        lexer = get_lexer_by_name('robotframework')
 
         with open(path, 'r') as source:
             formatter = HtmlFormatter(noclasses=False)
@@ -374,7 +374,7 @@ class VariablesDirective(Directive):
         )
 
         with open(path, 'r') as source:
-            lexer = RobotFrameworkLexer()
+            lexer = get_lexer_by_name('robotframework')
             formatter = HtmlFormatter(noclasses=False)
             parsed = highlight(source.read(), lexer, formatter)
 

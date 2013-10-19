@@ -23,6 +23,7 @@ setup(
     zip_safe=False,
     install_requires=[
         "setuptools",
+        "pygments>=1.6rc1",
         "robotframework>=2.7.1",
     ]
 )
