@@ -4,12 +4,8 @@ Changelog
 0.7.2 (unreleased)
 ------------------
 
-- Nothing changed yet.
-
-
-0.7.1 (2013-10-18)
-------------------
-
+- Fix to use RobotFrameworkLexer from Pygments. Require Pygments >= 1.6rc1
+  [Asko Soukka]
 - Drop dependency on robotframeworklexer, because it's included in Pygments
   [Asko Soukka]
 
