@@ -49,8 +49,20 @@ def get_title_style(used_styles=[], level=1):
         return available_styles[0]
 
 
+def get_tags_information(obj, tags):
+    tags_info = ''
+    for tag in tags:
+        tag_object = getattr(obj, tag.lower(), None)
+        if tag_object and len(tag_object) > 1:
+            tag_list = tag_object.as_list()
+            tags_info += ' ' * 4 + tag_list[0] + '  ' + ', '.join(tag_list[1:]) + '\n'
+
+    return tags_info
+
+
 class Adapter(object):
 
+    TAGS_LIST = []
     registry = {}
 
     def __init__(self, context, *args):
@@ -94,6 +106,7 @@ Adapter.register(robot.parsing.model.ForLoop, ForLoopNode)
 
 
 class TestCaseNode(Adapter):
+    TAGS_LIST = ["setup", "teardown", "tags", "documentation", "template", "timeout"]
 
     def __call__(self, obj):
 
@@ -117,9 +130,12 @@ class TestCaseNode(Adapter):
         if self.context.options.get('style', 'default') == 'minimal':
             return [node]
 
+        tags_info = get_tags_information(obj, TestCaseNode.TAGS_LIST) if self.context.options.get('style', 'default') == "expanded" else ''
+
         all_steps = filter(lambda x: not x.is_comment(), obj.steps)
 
         steps = u'***Test Cases***\n\n%s\n' % obj.name
+        steps += tags_info
         for step in flatten(map(Adapter(self.context), all_steps)):
             steps += ' ' * 4 + step.astext() + '\n'
 
@@ -146,6 +162,7 @@ Adapter.register(robot.parsing.model.TestCase, TestCaseNode)
 
 
 class UserKeywordNode(Adapter):
+    TAGS_LIST = ["documentation", "arguments", "return", "teardown", "timeout"]
 
     def __call__(self, obj):
 
@@ -169,9 +186,12 @@ class UserKeywordNode(Adapter):
         if self.context.options.get('style', 'default') == 'minimal':
             return [node]
 
+        tags_info = get_tags_information(obj, UserKeywordNode.TAGS_LIST) if self.context.options.get('style', 'default') == "expanded" else ''
+
         all_steps = filter(lambda x: not x.is_comment(), obj.steps)
 
         steps = u'***Keywords***\n\n%s\n' % obj.name
+        steps += tags_info
         for step in flatten(map(Adapter(self.context), all_steps)):
             steps += ' ' * 4 + step.astext() + '\n'
 
@@ -215,10 +235,9 @@ class SourceDirective(Directive):
     }
 
     def run(self):
-        path = resolve_path(
-            self.options.get('source', self.options.get('suite')),
-            os.path.dirname(self.state.document.current_source)
-        )
+        path = resolve_path(self.options.get('source', self.options.get('suite')),
+                            os.path.dirname(self.state.document.current_source)
+                            )
 
         lexer = get_lexer_by_name('robotframework')
 
@@ -247,14 +266,11 @@ class SettingsDirective(Directive):
     }
 
     def run(self):
-        path = resolve_path(
-            self.options.get(
-                'source', self.options.get(
-                'suite', self.options.get(
-                'resource'))
-            ),
-            os.path.dirname(self.state.document.current_source)
-        )
+        path = resolve_path(self.options.get('source', self.options.get('suite',
+                                                                        self.options.get('resource'))
+                                             ),
+                            os.path.dirname(self.state.document.current_source)
+                            )
 
         try:
             resource = robot.parsing.TestData(source=path)
@@ -364,14 +380,12 @@ class VariablesDirective(Directive):
     }
 
     def run(self):
-        path = resolve_path(
-            self.options.get(
-                'source', self.options.get(
-                'suite', self.options.get(
-                'resource'))
-            ),
-            os.path.dirname(self.state.document.current_source)
-        )
+        path = resolve_path(self.options.get('source',
+                                             self.options.get('suite',
+                                                              self.options.get('resource'))
+                                             ),
+                            os.path.dirname(self.state.document.current_source)
+                            )
 
         with open(path, 'r') as source:
             lexer = get_lexer_by_name('robotframework')
@@ -490,14 +504,12 @@ class KeywordsDirective(Directive):
     }
 
     def run(self):
-        path = resolve_path(
-            self.options.get(
-                'source', self.options.get(
-                'suite', self.options.get(
-                'resource'))
-            ),
-            os.path.dirname(self.state.document.current_source)
-        )
+        path = resolve_path(self.options.get('source',
+                                             self.options.get('suite',
+                                                              self.options.get('resource'))
+                                             ),
+                            os.path.dirname(self.state.document.current_source)
+                            )
 
         try:
             resource = robot.parsing.TestData(source=path)
