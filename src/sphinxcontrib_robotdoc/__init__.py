@@ -53,7 +53,7 @@ def get_tags_information(obj, tags):
     tags_info = ''
     for tag in tags:
         tag_object = getattr(obj, tag.lower(), None)
-        if tag_object and len(tag_object) > 1:
+        if tag_object and len(tag_object.as_list()) > 1:
             tag_list = tag_object.as_list()
             tags_info += ' ' * 4 + tag_list[0] + '  ' + ', '.join(tag_list[1:]) + '\n'
 
