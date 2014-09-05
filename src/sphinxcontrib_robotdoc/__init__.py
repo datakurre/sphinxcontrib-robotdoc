@@ -162,7 +162,7 @@ Adapter.register(robot.parsing.model.TestCase, TestCaseNode)
 
 
 class UserKeywordNode(Adapter):
-    TAGS_LIST = ["documentation", "arguments", "return", "teardown", "timeout"]
+    TAGS_LIST = ["docs", "args", "return_", "teardown", "timeout"]
 
     def __call__(self, obj):
 
