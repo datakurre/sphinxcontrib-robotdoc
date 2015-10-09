@@ -1,26 +1,23 @@
 # -*- coding: utf-8 -*-
 """Robot Framework AutoDoc for Sphinx"""
-import os
-import re
-import pkg_resources
-
-import robot
 from docutils import statemachine
 from docutils.parsers.rst import directives
 from pygments import highlight
+# noinspection PyUnresolvedReferences
+from pygments.formatters import HtmlFormatter
+# noinspection PyUnresolvedReferences
+from pygments.formatters import LatexFormatter
 from pygments.lexers import get_lexer_by_name
-from pygments.formatters import (
-    HtmlFormatter,
-    LatexFormatter
-)
-from sphinx.util.compat import (
-    nodes,
-    Directive
-)
+from sphinx.util.compat import Directive
+from sphinx.util.compat import nodes
+import os
+import pkg_resources
+import re
+import robot
 
 
 def flatten(list_):
-    return [item for sublist in list_ for item in sublist]
+    return [item for sub_list in list_ for item in sub_list]
 
 
 def resolve_path(spec, cwd):
@@ -33,7 +30,9 @@ def resolve_path(spec, cwd):
         return spec
 
 
-def get_title_style(used_styles=[], level=1):
+def get_title_style(used_styles=None, level=1):
+    if used_styles is None:
+        used_styles = []
     if len(used_styles) >= level:
         return used_styles[level - 1]
     else:
@@ -55,13 +54,13 @@ def get_tags_information(obj, tags):
         tag_object = getattr(obj, tag.lower(), None)
         if tag_object and len(tag_object.as_list()) > 1:
             tag_list = tag_object.as_list()
-            tags_info += ' ' * 4 + tag_list[0] + '  ' + ', '.join(tag_list[1:]) + '\n'
+            tags_info += ' ' * 4 + tag_list[0] + '  ' + '  '.join(
+                tag_list[1:]) + '\n'
 
     return tags_info
 
 
 class Adapter(object):
-
     TAGS_LIST = []
     registry = {}
 
@@ -78,7 +77,6 @@ class Adapter(object):
 
 
 class StepNode(Adapter):
-
     def __init__(self, context, prefix=''):
         super(StepNode, self).__init__(context)
         self.prefix = prefix
@@ -92,21 +90,23 @@ class StepNode(Adapter):
             prefix = '  ' + prefix
         return [nodes.inline(text=prefix + value)]
 
+
 Adapter.register(robot.parsing.model.Step, StepNode)
 
 
 class ForLoopNode(Adapter):
-
     def __call__(self, obj):
         all_steps = filter(lambda x: not x.is_comment(), obj.steps)
         return StepNode(self.context)(obj) + flatten(
             map(Adapter(self.context, '\\    '), all_steps))
 
+
 Adapter.register(robot.parsing.model.ForLoop, ForLoopNode)
 
 
 class TestCaseNode(Adapter):
-    TAGS_LIST = ["setup", "teardown", "tags", "documentation", "template", "timeout"]
+    TAGS_LIST = ["setup", "teardown", "tags", "documentation", "template",
+                 "timeout"]
 
     def __call__(self, obj):
 
@@ -130,7 +130,9 @@ class TestCaseNode(Adapter):
         if self.context.options.get('style', 'default') == 'minimal':
             return [node]
 
-        tags_info = get_tags_information(obj, TestCaseNode.TAGS_LIST) if self.context.options.get('style', 'default') == "expanded" else ''
+        tags_info = get_tags_information(obj,
+                                         TestCaseNode.TAGS_LIST) if self.context.options.get(
+            'style', 'default') == "expanded" else ''
 
         all_steps = filter(lambda x: not x.is_comment(), obj.steps)
 
@@ -157,6 +159,7 @@ class TestCaseNode(Adapter):
         node.append(nodes.raw('', parsed, format='latex'))
 
         return [node]
+
 
 Adapter.register(robot.parsing.model.TestCase, TestCaseNode)
 
@@ -186,7 +189,9 @@ class UserKeywordNode(Adapter):
         if self.context.options.get('style', 'default') == 'minimal':
             return [node]
 
-        tags_info = get_tags_information(obj, UserKeywordNode.TAGS_LIST) if self.context.options.get('style', 'default') == "expanded" else ''
+        tags_info = get_tags_information(obj,
+                                         UserKeywordNode.TAGS_LIST) if self.context.options.get(
+            'style', 'default') == "expanded" else ''
 
         all_steps = filter(lambda x: not x.is_comment(), obj.steps)
 
@@ -214,6 +219,7 @@ class UserKeywordNode(Adapter):
 
         return [node]
 
+
 Adapter.register(robot.parsing.model.UserKeyword, UserKeywordNode)
 
 
@@ -235,9 +241,10 @@ class SourceDirective(Directive):
     }
 
     def run(self):
-        path = resolve_path(self.options.get('source', self.options.get('suite')),
-                            os.path.dirname(self.state.document.current_source)
-                            )
+        path = resolve_path(
+            self.options.get('source', self.options.get('suite')),
+            os.path.dirname(self.state.document.current_source)
+        )
 
         lexer = get_lexer_by_name('robotframework')
 
@@ -266,11 +273,13 @@ class SettingsDirective(Directive):
     }
 
     def run(self):
-        path = resolve_path(self.options.get('source', self.options.get('suite',
-                                                                        self.options.get('resource'))
-                                             ),
-                            os.path.dirname(self.state.document.current_source)
-                            )
+        path = resolve_path(
+            self.options.get('source', self.options.get('suite',
+                                                        self.options.get(
+                                                            'resource'))
+                             ),
+            os.path.dirname(self.state.document.current_source)
+        )
 
         try:
             resource = robot.parsing.TestData(source=path)
@@ -382,7 +391,8 @@ class VariablesDirective(Directive):
     def run(self):
         path = resolve_path(self.options.get('source',
                                              self.options.get('suite',
-                                                              self.options.get('resource'))
+                                                              self.options.get(
+                                                                  'resource'))
                                              ),
                             os.path.dirname(self.state.document.current_source)
                             )
@@ -473,10 +483,11 @@ class TestCasesDirective(Directive):
         # 1) Recurse through the test suite and filter tests by name
         def recurse(child_suite, suite_parent):
             tests.extend(filter(lambda x: needle.match(x.name),
-                         child_suite.testcase_table.tests))
+                                child_suite.testcase_table.tests))
 
             for grandchild in getattr(child_suite, 'children', []):
                 recurse(grandchild, suite_parent)
+
         recurse(suite, suite_parent)
 
         # 2) When tags option is set, filter the found tests by given tags
@@ -506,7 +517,8 @@ class KeywordsDirective(Directive):
     def run(self):
         path = resolve_path(self.options.get('source',
                                              self.options.get('suite',
-                                                              self.options.get('resource'))
+                                                              self.options.get(
+                                                                  'resource'))
                                              ),
                             os.path.dirname(self.state.document.current_source)
                             )

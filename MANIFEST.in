@@ -1,5 +1,2 @@
-recursive-include src *
-include README.rst
-include CHANGES.txt
-include *
-global-exclude *.pyc
+include *.rst
+include *.py
