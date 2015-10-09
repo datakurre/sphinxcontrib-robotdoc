@@ -1,7 +1,7 @@
 Changelog
 =========
 
-0.7.4 (2014-09-05)
+0.8.0 (2015-10-09)
 ------------------
 
 - Change to separate tags with double space instead comma
