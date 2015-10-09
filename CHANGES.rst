@@ -4,8 +4,8 @@ Changelog
 0.7.4 (2014-09-05)
 ------------------
 
-- Fixed keywords tags handling in expanded style.
-  [Tomasz Kolek]
+- Change to separate tags with double space instead comma
+  [Asko Soukka]
 
 
 0.7.3 (2014-06-13)
