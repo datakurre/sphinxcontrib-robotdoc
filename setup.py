@@ -10,7 +10,6 @@ setup(
     # Get more strings from
     # http://pypi.python.org/pypi?%3Aaction=list_classifiers
     classifiers=[
-        'Programming Language :: Python',
         'Programming Language :: Python :: 2 :: Only',
     ],
     keywords='',
