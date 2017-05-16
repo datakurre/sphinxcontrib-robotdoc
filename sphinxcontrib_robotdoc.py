@@ -41,8 +41,7 @@ def get_title_style(used_styles=None, level=1):
             '=', '-', '`', ':' '\'', '"', '~',
             '^', '_', '*', '+', '#', '<', '>'
         ]
-        available_styles = filter(lambda x: x not in used_styles,
-                                  rst_title_styles)
+        available_styles = [x for x in rst_title_styles if x not in used_styles]
         assert available_styles, ("Maximum section depth has been reached. "
                                   "No more title styles available.")
         return available_styles[0]
@@ -96,9 +95,9 @@ Adapter.register(robot.parsing.model.Step, StepNode)
 
 class ForLoopNode(Adapter):
     def __call__(self, obj):
-        all_steps = filter(lambda x: not x.is_comment(), obj.steps)
+        all_steps = [x for x in obj.steps if not x.is_comment()]
         return StepNode(self.context)(obj) + flatten(
-            map(Adapter(self.context, '\\    '), all_steps))
+            list(map(Adapter(self.context, '\\    '), all_steps)))
 
 
 Adapter.register(robot.parsing.model.ForLoop, ForLoopNode)
@@ -134,11 +133,11 @@ class TestCaseNode(Adapter):
                                          TestCaseNode.TAGS_LIST) if self.context.options.get(
             'style', 'default') == "expanded" else ''
 
-        all_steps = filter(lambda x: not x.is_comment(), obj.steps)
+        all_steps = [x for x in obj.steps if not x.is_comment()]
 
-        steps = u'***Test Cases***\n\n%s\n' % obj.name
+        steps = '***Test Cases***\n\n%s\n' % obj.name
         steps += tags_info
-        for step in flatten(map(Adapter(self.context), all_steps)):
+        for step in flatten(list(map(Adapter(self.context), all_steps))):
             steps += ' ' * 4 + step.astext() + '\n'
 
         lexer = get_lexer_by_name('robotframework')
@@ -193,11 +192,11 @@ class UserKeywordNode(Adapter):
                                          UserKeywordNode.TAGS_LIST) if self.context.options.get(
             'style', 'default') == "expanded" else ''
 
-        all_steps = filter(lambda x: not x.is_comment(), obj.steps)
+        all_steps = [x for x in obj.steps if not x.is_comment()]
 
-        steps = u'***Keywords***\n\n%s\n' % obj.name
+        steps = '***Keywords***\n\n%s\n' % obj.name
         steps += tags_info
-        for step in flatten(map(Adapter(self.context), all_steps)):
+        for step in flatten(list(map(Adapter(self.context), all_steps))):
             steps += ' ' * 4 + step.astext() + '\n'
 
         lexer = get_lexer_by_name('robotframework')
@@ -482,8 +481,7 @@ class TestCasesDirective(Directive):
 
         # 1) Recurse through the test suite and filter tests by name
         def recurse(child_suite, suite_parent):
-            tests.extend(filter(lambda x: needle.match(x.name),
-                                child_suite.testcase_table.tests))
+            tests.extend([x for x in child_suite.testcase_table.tests if needle.match(x.name)])
 
             for grandchild in getattr(child_suite, 'children', []):
                 recurse(grandchild, suite_parent)
@@ -492,15 +490,14 @@ class TestCasesDirective(Directive):
 
         # 2) When tags option is set, filter the found tests by given tags
         tags = self.options.get('tags', '').split(',')
-        tags = map(lambda x: x.strip(), tags)
-        tags = filter(lambda x: bool(x), tags)
-        tag_filter = lambda x: filter(lambda y: bool(y),
-                                      [tag in x.tags.value for tag in tags])
+        tags = [x.strip() for x in tags]
+        tags = [x for x in tags if bool(x)]
+        tag_filter = lambda x: [y for y in [tag in x.tags.value for tag in tags] if bool(y)]
 
-        tests = filter(lambda x: tag_filter(x), tests) if tags else tests
+        tests = [x for x in tests if tag_filter(x)] if tags else tests
 
         # Finally, return Docutils nodes for the tests
-        return flatten(map(Adapter(self), tests))
+        return flatten(list(map(Adapter(self), tests)))
 
 
 class KeywordsDirective(Directive):
@@ -534,9 +531,9 @@ class KeywordsDirective(Directive):
         else:
             needle = re.compile('.*', re.U)
 
-        keywords = filter(lambda x: needle.match(x.name), resource.keywords)
+        keywords = [x for x in resource.keywords if needle.match(x.name)]
 
-        return flatten(map(Adapter(self), keywords))
+        return flatten(list(map(Adapter(self), keywords)))
 
 
 def setup(app):
@@ -556,6 +553,6 @@ def setup(app):
 
     # LaTeX-support:
     app.config.latex_preamble += '''\
-\usepackage{fancyvrb}
-\usepackage{color}
+\\usepackage{fancyvrb}
+\\usepackage{color}
 ''' + LatexFormatter().get_style_defs()
