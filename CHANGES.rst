@@ -4,7 +4,7 @@ Changelog
 0.8.1 (unreleased)
 ------------------
 
-- Support for python 3 (see issue #10)
+- Python 3 support
   [Stein Heselmans]
 
 
