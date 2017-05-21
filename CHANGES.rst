@@ -1,7 +1,7 @@
 Changelog
 =========
 
-0.8.1 (unreleased)
+0.9.0 (2017-05-21)
 ------------------
 
 - Python 3 support
