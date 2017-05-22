@@ -4,7 +4,8 @@ Changelog
 0.9.1 (unreleased)
 ------------------
 
-- Nothing changed yet.
+- Allow for tabs in documentation of robot files
+  [Stein Heselmans]
 
 
 0.9.0 (2017-05-21)
