@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='sphinxcontrib-robotdoc',
-    version='0.9.1.dev0',
+    version='0.9.1',
     description=('Sphinx extension to embed Robot Framework test cases '
                  'and user keywords into Sphinx documents'),
     long_description=(open('README.rst').read() + '\n' +
