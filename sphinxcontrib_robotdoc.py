@@ -114,6 +114,7 @@ class TestCaseNode(Adapter):
         title_style = get_title_style(used_title_styles, section_level)
         title = obj.name + '\n' + title_style * len(obj.name) + '\n\n'
         documentation = obj.doc.value.replace('\\n', '\n')  # fix linebreaks
+        documentation = documentation.replace('\\t', '    ')  # fix tabs
 
         temp = nodes.Element()
         lines = statemachine.string2lines(title + documentation)
@@ -173,6 +174,7 @@ class UserKeywordNode(Adapter):
         title_style = get_title_style(used_title_styles, section_level)
         title = obj.name + '\n' + title_style * len(obj.name) + '\n\n'
         documentation = obj.doc.value.replace('\\n', '\n')  # fix linebreaks
+        documentation = documentation.replace('\\t', '    ')  # fix tabs
 
         temp = nodes.Element()
         lines = statemachine.string2lines(title + documentation)
@@ -288,6 +290,7 @@ class SettingsDirective(Directive):
 
         obj = resource.setting_table
         documentation = obj.doc.value.replace('\\n', '\n')  # fix linebreaks
+        documentation = documentation.replace('\\t', '    ')  # fix tabs
 
         temp = nodes.Element()
         lines = statemachine.string2lines(documentation)
