@@ -1,8 +1,8 @@
 Changelog
 =========
 
-0.9.2 (unreleased)
-------------------
+0.10.0 (2018-05-11)
+-------------------
 
 - Add to release as universal wheel
   [Asko Soukka]
