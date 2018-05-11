@@ -8,8 +8,8 @@ from pygments.formatters import HtmlFormatter
 # noinspection PyUnresolvedReferences
 from pygments.formatters import LatexFormatter
 from pygments.lexers import get_lexer_by_name
-from sphinx.util.compat import Directive
-from sphinx.util.compat import nodes
+from docutils.parsers.rst import Directive
+from docutils import nodes
 import os
 import pkg_resources
 import re
@@ -555,7 +555,9 @@ def setup(app):
     app.add_directive('robot_keywords', KeywordsDirective)
 
     # LaTeX-support:
-    app.config.latex_preamble += '''\
+    if 'preamble' not in app.config.latex_elements:
+        app.config.latex_elements['preamble'] = ''
+    app.config.latex_elements['preamble'] += '''\
 \\usepackage{fancyvrb}
 \\usepackage{color}
 ''' + LatexFormatter().get_style_defs()
