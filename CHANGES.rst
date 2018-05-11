@@ -4,7 +4,10 @@ Changelog
 0.9.2 (unreleased)
 ------------------
 
-- Nothing changed yet.
+- Add to release as universal wheel
+  [Asko Soukka]
+- Changes for newer sphinx versions
+  [Stein Heselmans]
 
 
 0.9.1 (2017-05-31)
