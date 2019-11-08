@@ -348,7 +348,7 @@ class SettingsDirective(Directive):
                     section),
                 re.I + re.S + re.M
             )
-            parsed = regex.sub('\end{Verbatim}\n', parsed)
+            parsed = regex.sub('\\\end{Verbatim}\n', parsed)
 
         # Remove documentation from the settings table
         if parsed.find('\\PY{k+kn}{Documentation}') >= 0:
@@ -443,7 +443,7 @@ class VariablesDirective(Directive):
                     section),
                 re.I + re.S + re.M
             )
-            parsed = regex.sub('\end{Verbatim}\n', parsed)
+            parsed = regex.sub('\\\end{Verbatim}\n', parsed)
 
         # Remove heading from the settings table when required
         if self.options.get('style', 'default') == 'default':
