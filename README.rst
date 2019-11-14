@@ -2,7 +2,7 @@ Introduction
 ------------
 
 This package provides a Sphinx-extension to embed Robot Framework test suites,
-test cases, or user keywords in into Sphinx-documents in spirit of the autodoc
+test cases, or user keywords into Sphinx-documents in spirit of the autodoc
 Sphinx-extension.
 
 
@@ -55,7 +55,7 @@ resources (using syntax *package_name:resource/path/in/package*) or a relative
 path from the current document.
 
 The test case directive (``robot-tests``) accepts also an option ``tags``,
-which is optional. It should inclue a comma separated list of the tags to be
+which is optional. It should include a comma-separated list of the tags to be
 used when filtering the tests to be embedded.
 
 Both directives take an optional ``style``-option. When ``style`` is set
@@ -63,7 +63,7 @@ to ``expanded`` the output will include headings such as the table name and
 test case or keyword name. When ``style`` is set to ``minimal`` the output
 will include only the target documentation strings without any robot syntax.
 
-Please, note that he documentation found from the embedded test is parsed
+Please, note that the documentation found from the embedded test is parsed
 using Docutils, as a part of the target document. This differs from `Robot
 Framework`_'s own documentation tools, which expect its own custom markup.
 
@@ -99,14 +99,16 @@ include the table name.
 LaTeX output
 ------------
 
-LaTeX output is based on Pygments LatexFormatter, which requires custom
-style definitions to be injeced into latex document preamble. That's done by
-default, but when Sphinx ``latex_preamble`` setting is set manually, it
+LaTeX output is based on Pygments_ LatexFormatter, which requires custom
+style definitions to be injected into the latex document preamble. That's done
+by default, but when Sphinx' ``latex_preamble`` setting is set manually, it
 should include the following::
 
    from pygments.formatters import LatexFormatter
 
    latex_elements['latex_preamble'] = '''\
-   \usepackage{fancyvrb}
-   \usepackage{color}
+   \\usepackage{fancyvrb}
+   \\usepackage{color}
    ''' + LatexFormatter().get_style_defs()
+
+.. _Pygments: https://pygments.org/
